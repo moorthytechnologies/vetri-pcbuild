@@ -27,12 +27,25 @@ def add_to_cart(product):
     st.session_state.cart.append(product)
     st.success(f"Added {product['name']} to cart!")
 
-# Sidebar Navigation
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Home", "Cart"])
+# Function to remove an item from the cart
+def remove_from_cart(product_id):
+    st.session_state.cart = [item for item in st.session_state.cart if item["id"] != product_id]
+    st.rerun()  # Force UI refresh
+    
+
+selected_page = option_menu(
+    menu_title=None,
+    options=["Home", "Cart"],
+    icons=['house', 'cart'],
+    menu_icon="cast",
+    default_index=0,
+    orientation="horizontal",
+    )
+
+
 
 # Home Page - Display Products
-if page == "Home":
+if selected_page == "Home":
     st.title("🖥 Vetri's Rendering PC for Architects")
     st.write("🛒Browse our configuration and add them to your cart.")
 
@@ -51,7 +64,7 @@ if page == "Home":
                 add_to_cart(product)
 
 # Cart Page - View Added Items
-elif page == "Cart":
+elif selected_page == "Cart":
     st.title("🛒 Your Cart")
 
     if not st.session_state.cart:
@@ -60,16 +73,14 @@ elif page == "Cart":
         total_price = 0
         for item in st.session_state.cart:
             image_path = os.path.join(IMAGE_DIR, item["image"])
-            col1, col2 = st.columns([1, 3])
+            col1, col2, col3 = st.columns([2, 3, 1])  # Three columns (image, details, remove button)
             with col1:
                 st.image(image_path, width=100)  # Display cart item image
             with col2:
                 st.write(f"✅ {item['name']} - ₹{item['price']:,.2f}")
+            with col3:
+                if st.button("❌", key=f"remove_{item['id']}"):
+                    remove_from_cart(item["id"])
             total_price += item["price"]
         formatted_total = f"{total_price:,.2f}"  # Format total price
         st.write(f"**Total: ₹{formatted_total}**")
-
-        # Clear Cart Button
-        if st.button("Clear Cart"):
-            st.session_state.cart = []
-            st.success("Cart cleared successfully!")
